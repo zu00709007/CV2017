@@ -97,31 +97,32 @@ void saveBMP(string fileName, RGBTRIPLE **destination)
     cout << "Save " << fileName << " successfully" << endl;
 }
 
-void Binary_Scale(int scale[][66])
+void Binary_Scale(unsigned char scale[][514])
 {
     int i, j;
-    for(i=bmpInfo.biHeight-1; i>-1; i-=8)
-        for(j=0; j<bmpInfo.biWidth; j+=8)
-            scale[64-(i>>3)][1+(j>>3)] = (BMPdata[i][j].color < 128 ? 0 : 1);
+    for(i=bmpInfo.biHeight-1; i>-1; --i)
+        for(j=0; j<bmpInfo.biWidth; ++j)
+            scale[512-i][1+j] = (BMPdata[i][j].color < 128 ? 0 : 1);
 }
 
-void Yokoi_Connectivity(int scale[][66])
+void Yokoi_Connectivity(unsigned char output[][514], unsigned char scale[][514])
 {
-    int i, j, r, q, up, down, left, right, output[66][66] = {0};
-    for(i=0; i<66; ++i)
-        for(j=0; j<66; ++j)
+    int i, j, r, q, up, down, left, right;
+    for(i=0; i<514; ++i)
+        for(j=0; j<514; ++j)
         {
             if(scale[i][j])
             {
                 r = 0;
                 q = 0;
                 up = i>0 ? i-1 : 0;
-                down = i<65 ? i+1 : 65;
+                down = i<513 ? i+1 : 513;
                 left = j>0 ? j-1 : 0;
-                right = j<65 ? j+1 : 65;
+                right = j<513 ? j+1 : 513;
+
                 if(scale[up][j])
                 {
-                    if(scale[up][left] && scale[i][left])
+                    if(scale[up][left]  && scale[i][left])
                         ++r;
                     else
                         ++q;
@@ -152,40 +153,73 @@ void Yokoi_Connectivity(int scale[][66])
                 else
                     output[i][j] = q;
             }
-        }
-    FILE* fptr = fopen("Yokoi","w");
-    for(i=1; i<64; ++i)
-    {
-        for(j=1; j<65; ++j)
-        {
-            if(!output[i][j])
-                fprintf(fptr, " ");
             else
-                fprintf(fptr, "%d", output[i][j]);
+                output[i][j] = 0;
         }
-        fprintf(fptr, "\n");
-    }
-    for(j=1; j<65; ++j)
-    {
-        if(!output[i][j])
-            fprintf(fptr, " ");
-        else
-            fprintf(fptr, "%d", output[i][j]);
-    }
 }
 
+void Pair_Relationship(unsigned char output[][514], unsigned char pairmatrix[][514])
+{
+    int i, j;
+    for(i=0; i<514; ++i)
+        for(j=0; j<514; ++j)
+            if(1 == output[i][j] && (1 == output[i-1][j] || 1 == output[i+1][j] || 1 == output[i][j-1] || 1 == output[i][j+1]))
+                pairmatrix[i][j]='p';
+            else
+                pairmatrix[i][j]='q';
+}
+
+void Connected_Shrink(unsigned char pairmatrix[][514], unsigned char scale[][514], bool* check)
+{
+    int i, j, c;
+    for(i=0; i<514; ++i)
+        for(j=0; j<514; ++j)
+            if('p' == pairmatrix[i][j])
+            {
+                c = 0;
+                (*check) = true;
+                if((scale[i-1][j]) && (!scale[i-1][j-1] || !scale[i][j-1]))
+                    ++c;
+                if((scale[i][j+1]) && (!scale[i-1][j+1] || !scale[i-1][j]))
+                    ++c;
+                if((scale[i][j-1]) && (!scale[i+1][j-1] || !scale[i+1][j]))
+                    ++c;
+                if((scale[i+1][j]) && (!scale[i+1][j+1] || !scale[i][j+1]))
+                    ++c;
+                if(1 == c)
+                    scale[i][j] = 0;
+            }
+}
 
 int main(int argc, char *argv[])
 {
     if(argc < 2)
     {
         cout << "Please give input filename" << endl;
-        //return 0;
+        return 0;
     }
-    string infileName = "lena.bmp";//argv[1];
+    string infileName = argv[1];
     readBMP(infileName);
-    int scale[66][66] = {0};
+    unsigned char scale[514][514] = {0}, output[514][514], pairmatrix[514][514];
     Binary_Scale(scale);
-    Yokoi_Connectivity(scale);
+
+    bool check = true;
+    while(check)
+    {
+        check = false;
+        Yokoi_Connectivity(output,scale);
+        Pair_Relationship(output, pairmatrix);
+        Connected_Shrink(pairmatrix, scale, &check);
+    }
+
+    for(int i=1; i<513; ++i)
+        for(int j=1; j<513; ++j)
+        {
+            if(scale[i][j])
+                BMPdata[512-i][j].color = 255;
+            else
+                BMPdata[512-i][j].color = 0;
+        }
+    saveBMP("thinning_" + infileName, BMPdata);
     return 0;
 }
