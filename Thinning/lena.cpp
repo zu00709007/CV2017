@@ -163,7 +163,7 @@ void Pair_Relationship(unsigned char output[][514], unsigned char pairmatrix[][5
     int i, j;
     for(i=0; i<514; ++i)
         for(j=0; j<514; ++j)
-            if(1 == output[i][j] && (1 == output[i-1][j] || 1 == output[i+1][j] || 1 == output[i][j-1] || 1 == output[i][j+1]))
+            if(1 == output[i][j] && (1 == output[i-1][j] || 1 == output[i+1][j] || 1 == output[i][j-1] || 1 == output[i][j+1] || 1 == output[i-1][j-1] || 1 == output[i+1][j+1] || 1 == output[i+1][j-1] || 1 == output[i-1][j+1]))
                 pairmatrix[i][j]='p';
             else
                 pairmatrix[i][j]='q';
