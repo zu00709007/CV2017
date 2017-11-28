@@ -97,97 +97,64 @@ void saveBMP(string fileName, RGBTRIPLE **destination)
     cout << "Save " << fileName << " successfully" << endl;
 }
 
-void Binary_Scale(unsigned char scale[][514])
+void Binary_binary(unsigned char binary[][514])
 {
     int i, j;
     for(i=bmpInfo.biHeight-1; i>-1; --i)
         for(j=0; j<bmpInfo.biWidth; ++j)
-            scale[512-i][1+j] = (BMPdata[i][j].color < 128 ? 0 : 1);
+            binary[512-i][1+j] = (BMPdata[i][j].color < 128 ? 0 : 1);
 }
 
-void Yokoi_Connectivity(unsigned char output[][514], unsigned char scale[][514])
-{
-    int i, j, r, q, up, down, left, right;
-    for(i=0; i<514; ++i)
-        for(j=0; j<514; ++j)
-        {
-            if(scale[i][j])
-            {
-                r = 0;
-                q = 0;
-                up = i>0 ? i-1 : 0;
-                down = i<513 ? i+1 : 513;
-                left = j>0 ? j-1 : 0;
-                right = j<513 ? j+1 : 513;
-
-                if(scale[up][j])
-                {
-                    if(scale[up][left]  && scale[i][left])
-                        ++r;
-                    else
-                        ++q;
-                }
-                if(scale[i][right])
-                {
-                    if(scale[up][right] && scale[up][j])
-                        ++r;
-                    else
-                        ++q;
-                }
-                if(scale[i][left])
-                {
-                    if(scale[down][left] && scale[down][j])
-                        ++r;
-                    else
-                        ++q;
-                }
-                if(scale[down][j])
-                {
-                    if(scale[down][right] && scale[i][right])
-                        ++r;
-                    else
-                        ++q;
-                }
-                if(r == 4)
-                    output[i][j] = 5;
-                else
-                    output[i][j] = q;
-            }
-            else
-                output[i][j] = 0;
-        }
-}
-
-void Pair_Relationship(unsigned char output[][514], unsigned char pairmatrix[][514])
+void Mark_Interior_Border(unsigned char bordermap[][514], unsigned char binary[][514])
 {
     int i, j;
     for(i=0; i<514; ++i)
         for(j=0; j<514; ++j)
-            if(1 == output[i][j] && (1 == output[i-1][j] || 1 == output[i+1][j] || 1 == output[i][j-1] || 1 == output[i][j+1] || 1 == output[i-1][j-1] || 1 == output[i+1][j+1] || 1 == output[i+1][j-1] || 1 == output[i-1][j+1]))
-                pairmatrix[i][j]='p';
+        {
+            if(binary[i][j])
+            {
+                if(binary[i+1][j] && binary[i-1][j] && binary[i][j+1] && binary[i][j-1])
+                    bordermap[i][j] = 2;
+                else
+                    bordermap[i][j] = 1;
+            }
             else
-                pairmatrix[i][j]='q';
+                bordermap[i][j] = 0;
+        }
 }
 
-void Connected_Shrink(unsigned char pairmatrix[][514], unsigned char scale[][514], bool* check)
+void Pair_Relationship(unsigned char bordermap[][514], unsigned char pairmatrix[][514])
 {
-    int i, j, c;
+    int i, j;
     for(i=0; i<514; ++i)
         for(j=0; j<514; ++j)
+            if(1 != bordermap[i][j] || (2 != bordermap[i-1][j] && 2 != bordermap[i+1][j] && 2 != bordermap[i][j-1] && 2 != bordermap[i][j+1]))
+                pairmatrix[i][j] = 'q';
+            else
+                pairmatrix[i][j] = 'p';
+}
+
+void Connected_Shrink(unsigned char pairmatrix[][514], unsigned char binary[][514], bool* check)
+{
+    int i, j, c;
+    for(j=0; j<514; ++j)
+        for(i=0; i<514; ++i)
             if('p' == pairmatrix[i][j])
             {
                 c = 0;
-                (*check) = true;
-                if((scale[i-1][j]) && (!scale[i-1][j-1] || !scale[i][j-1]))
+                if((binary[i-1][j]) && (!binary[i-1][j-1] || !binary[i][j-1]))
                     ++c;
-                if((scale[i][j+1]) && (!scale[i-1][j+1] || !scale[i-1][j]))
+                if((binary[i][j+1]) && (!binary[i-1][j+1] || !binary[i-1][j]))
                     ++c;
-                if((scale[i][j-1]) && (!scale[i+1][j-1] || !scale[i+1][j]))
+                if((binary[i][j-1]) && (!binary[i+1][j-1] || !binary[i+1][j]))
                     ++c;
-                if((scale[i+1][j]) && (!scale[i+1][j+1] || !scale[i][j+1]))
+                if((binary[i+1][j]) && (!binary[i+1][j+1] || !binary[i][j+1]))
                     ++c;
                 if(1 == c)
-                    scale[i][j] = 0;
+                {
+                    (*check) = true;
+                    binary[i][j] = 0;
+                }
             }
 }
 
@@ -200,25 +167,25 @@ int main(int argc, char *argv[])
     }
     string infileName = argv[1];
     readBMP(infileName);
-    unsigned char scale[514][514] = {0}, output[514][514], pairmatrix[514][514];
-    Binary_Scale(scale);
+    unsigned char binary[514][514] = {0}, bordermap[514][514], pairmatrix[514][514];
+    Binary_binary(binary);
 
     bool check = true;
     while(check)
     {
         check = false;
-        Yokoi_Connectivity(output,scale);
-        Pair_Relationship(output, pairmatrix);
-        Connected_Shrink(pairmatrix, scale, &check);
+        Mark_Interior_Border(bordermap,binary);
+        Pair_Relationship(bordermap, pairmatrix);
+        Connected_Shrink(pairmatrix, binary, &check);
     }
 
     for(int i=1; i<513; ++i)
         for(int j=1; j<513; ++j)
         {
-            if(scale[i][j])
-                BMPdata[512-i][j].color = 255;
+            if(binary[i][j])
+                BMPdata[512-i][j-1].color = 255;
             else
-                BMPdata[512-i][j].color = 0;
+                BMPdata[512-i][j-1].color = 0;
         }
     saveBMP("thinning_" + infileName, BMPdata);
     return 0;
