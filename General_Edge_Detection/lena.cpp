@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <math.h>
 #include <time.h>
-#include<algorithm>
+#include <algorithm>
 
 using namespace std;
 typedef unsigned char BYTE;
