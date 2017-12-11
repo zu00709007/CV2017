@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <math.h>
 #include <time.h>
-#include <algorithm>
+#include<algorithm>
 
 using namespace std;
 typedef unsigned char BYTE;
@@ -104,22 +104,22 @@ void saveBMP(string fileName, RGBTRIPLE **destination)
 void Robert(int threshold)
 {
     int i, j, r1, r2;
-    unsigned char tmp[bmpInfo.biHeight+1][bmpInfo.biWidth+1]= {0};
+    unsigned char tmp[bmpInfo.biHeight+2][bmpInfo.biWidth+2]= {0};
     char buf[10];
 
     for(i=0; i<bmpInfo.biHeight; ++i)
         for(j=0; j<bmpInfo.biWidth; ++j)
         {
-            tmp[i][j] = BMPdata[i][j].color;
+            tmp[i+1][j+1] = BMPdata[i][j].color;
             BMPoutput_data[i][j].color = 255;
         }
 
-    for(i=0; i<bmpInfo.biHeight-1; ++i)
-        for(j=0; j<bmpInfo.biWidth-1; ++j)
+    for(i=2; i<bmpInfo.biHeight; ++i)
+        for(j=2; j<bmpInfo.biWidth; ++j)
         {
-            r1 = tmp[i+1][j+1] - tmp[i][j];
-            r2 = tmp[i+1][j] - tmp[i][j+1];
-            BMPoutput_data[i][j].color = (sqrt(pow(r1, 2) + pow(r2, 2)) > threshold) ? 0 : 255;
+            r1 = tmp[i-1][j+1] - tmp[i][j];
+            r2 = tmp[i-1][j] - tmp[i][j+1];
+            BMPoutput_data[i-1][j-1].color = (sqrt(pow(r1, 2) + pow(r2, 2)) > threshold) ? 0 : 255;
         }
 
     sprintf(buf, "%d", threshold);
@@ -276,25 +276,25 @@ void Nevatia_Babu(int threshold)
             BMPoutput_data[i][j].color = 255;
         }
 
-    for(i=2; i<bmpInfo.biHeight; ++i)
+    for(i=4; i<bmpInfo.biHeight+2; ++i)
         for(j=4; j<bmpInfo.biWidth; ++j)
         {
-            n[0] = 100 * tmp[i-2][j-2] + 100 * tmp[i-2][j-1] + 100 * tmp[i-2][j] + 100 * tmp[i-2][j+1] + 100 * tmp[i-2][j+2] +
-                   100 * tmp[i-1][j-2] + 100 * tmp[i-1][j-1] + 100 * tmp[i-1][j] + 100 * tmp[i-1][j+1] + 100 * tmp[i-1][j+2] -
-                   100 * tmp[i+1][j-2] - 100 * tmp[i+1][j-1] - 100 * tmp[i+1][j] - 100 * tmp[i+1][j+1] - 100 * tmp[i+1][j+2] -
-                   100 * tmp[i+2][j-2] - 100 * tmp[i+2][j-1] - 100 * tmp[i+2][j] - 100 * tmp[i+2][j+1] - 100 * tmp[i+2][j+2];
+            n[0] = 0 - 100 * tmp[i-2][j-2] - 100 * tmp[i-2][j-1] - 100 * tmp[i-2][j] - 100 * tmp[i-2][j+1] - 100 * tmp[i-2][j+2] -
+                   100 * tmp[i-1][j-2] - 100 * tmp[i-1][j-1] - 100 * tmp[i-1][j] - 100 * tmp[i-1][j+1] - 100 * tmp[i-1][j+2] +
+                   100 * tmp[i+1][j-2] + 100 * tmp[i+1][j-1] + 100 * tmp[i+1][j] + 100 * tmp[i+1][j+1] + 100 * tmp[i+1][j+2] +
+                   100 * tmp[i+2][j-2] + 100 * tmp[i+2][j-1] + 100 * tmp[i+2][j] + 100 * tmp[i+2][j+1] + 100 * tmp[i+2][j+2];
 
-            n[1] = 100 * tmp[i-2][j-2] + 100 * tmp[i-2][j-1] + 100 * tmp[i-2][j] + 100 * tmp[i-2][j+1] + 100 * tmp[i-2][j+2] +
-                   100 * tmp[i-1][j-2] + 100 * tmp[i-1][j-1] + 100 * tmp[i-1][j] + 78 * tmp[i-1][j+1] - 32 * tmp[i-1][j+2] +
+            n[1] = 0 - 100 * tmp[i-2][j-2] - 100 * tmp[i-2][j-1] - 100 * tmp[i-2][j] - 100 * tmp[i-2][j+1] - 100 * tmp[i-2][j+2] +
+                   32 * tmp[i-1][j-2] - 78 * tmp[i-1][j-1] - 100 * tmp[i-1][j] - 100 * tmp[i-1][j+1] - 100 * tmp[i-1][j+2] +
                    100 * tmp[i][j-2] + 92 * tmp[i][j-1] - 92 * tmp[i][j+1] - 100 * tmp[i][j+2] +
-                   38 * tmp[i+1][j-2] - 78 * tmp[i+1][j-1] - 100 * tmp[i+1][j] - 100 * tmp[i+1][j+1] - 100 * tmp[i+1][j+2] -
-                   100 * tmp[i+2][j-2] - 100 * tmp[i+2][j-1] - 100 * tmp[i+2][j] - 100 * tmp[i+2][j+1] - 100 * tmp[i+2][j+2];
+                   100 * tmp[i+1][j-2] + 100 * tmp[i+1][j-1] + 100 * tmp[i+1][j] + 78 * tmp[i+1][j+1] - 32 * tmp[i+1][j+2] +
+                   100 * tmp[i+2][j-2] + 100 * tmp[i+2][j-1] + 100 * tmp[i+2][j] + 100 * tmp[i+2][j+1] + 100 * tmp[i+2][j+2];
 
-            n[2] = 100 * tmp[i-2][j-2] + 100 * tmp[i-2][j-1] + 100 * tmp[i-2][j] + 32 * tmp[i-2][j+1]+ -100 * tmp[i-2][j+2] +
-                   100 * tmp[i-1][j-2] + 100 * tmp[i-1][j-1] + 92 * tmp[i-1][j] - 78 * tmp[i-1][j+1] - 100 * tmp[i-1][j+2] +
+            n[2] = 100 * tmp[i-2][j-2] - 32 * tmp[i-2][j-1] - 100 * tmp[i-2][j] - 100 * tmp[i-2][j+1] - 100 * tmp[i-2][j+2] +
+                   100 * tmp[i-1][j-2] + 78 * tmp[i-1][j-1] - 92 * tmp[i-1][j] - 100 * tmp[i-1][j+1] - 100 * tmp[i-1][j+2] +
                    100 * tmp[i][j-2] + 100 * tmp[i][j-1] - 100 * tmp[i][j+1] - 100 * tmp[i][j+2] +
-                   100 * tmp[i+1][j-2] + 78 * tmp[i+1][j-1] - 92 * tmp[i+1][j] - 100 * tmp[i+1][j+1] - 100 * tmp[i+1][j+2] +
-                   100 * tmp[i+2][j-2] - 32 * tmp[i+2][j-1] - 100 * tmp[i+2][j] - 100 * tmp[i+2][j+1] - 100 * tmp[i+2][j+2];
+                   100 * tmp[i+1][j-2] + 100 * tmp[i+1][j-1] + 92 * tmp[i+1][j] - 78 * tmp[i+1][j+1] - 100 * tmp[i+1][j+2] +
+                   100 * tmp[i+2][j-2] + 100 * tmp[i+2][j-1] + 100 * tmp[i+2][j] + 32 * tmp[i+2][j+1] - 100 * tmp[i+2][j+2];
 
             n[3] = 0 - 100 * tmp[i-2][j-2] - 100 * tmp[i-2][j-1] + 100 * tmp[i-2][j+1] + 100 * tmp[i-2][j+2] -
                    100 * tmp[i-1][j-2] - 100 * tmp[i-1][j-1] + 100 * tmp[i-1][j+1]+ 100 * tmp[i-1][j+2] -
@@ -302,17 +302,17 @@ void Nevatia_Babu(int threshold)
                    100 * tmp[i+1][j-2] - 100 * tmp[i+1][j-1] + 100 * tmp[i+1][j+1] + 100 * tmp[i+1][j+2] -
                    100 * tmp[i+2][j-2] + -100 * tmp[i+2][j-1] + 0 * tmp[i+2][j] + 100 * tmp[i+2][j+1]+ 100 * tmp[i+2][j+2];
 
-            n[4] = 0 - 100 * tmp[i-2][j-2] + 32 * tmp[i-2][j-1] + 100 * tmp[i-2][j] + 100 * tmp[i-2][j+1]+ 100 * tmp[i-2][j+2] -
-                   100 * tmp[i-1][j-2] - 78 * tmp[i-1][j-1] + 92 * tmp[i-1][j] + 100 * tmp[i-1][j+1]+ 100 * tmp[i-1][j+2] -
+            n[4] = 0 - 100 * tmp[i-2][j-2] - 100 * tmp[i-2][j-1] - 100 * tmp[i-2][j] - 32 * tmp[i-2][j+1] + 100 * tmp[i-2][j+2] -
+                   100 * tmp[i-1][j-2] - 100 * tmp[i-1][j-1] - 92 * tmp[i-1][j] + 78 * tmp[i-1][j+1] + 100 * tmp[i-1][j+2] -
                    100 * tmp[i][j-2] - 100 * tmp[i][j-1] + 100 * tmp[i][j+1]+ 100 * tmp[i][j+2] -
-                   100 * tmp[i+1][j-2] - 100 * tmp[i+1][j-1] - 92 * tmp[i+1][j] + 78 * tmp[i+1][j+1] + 100 * tmp[i+1][j+2] -
-                   100 * tmp[i+2][j-2] - 100 * tmp[i+2][j-1] - 100 * tmp[i+2][j] - 32 * tmp[i+2][j+1] + 100 * tmp[i+2][j+2];
+                   100 * tmp[i+1][j-2] - 78 * tmp[i+1][j-1] + 92 * tmp[i+1][j] + 100 * tmp[i+1][j+1] + 100 * tmp[i+1][j+2] -
+                   100 * tmp[i+2][j-2] + 32 * tmp[i+2][j-1] + 100 * tmp[i+2][j] + 100 * tmp[i+2][j+1] + 100 * tmp[i+2][j+2];
 
-            n[5] = 100 * tmp[i-2][j-2] + 100 * tmp[i-2][j-1] + 100 * tmp[i-2][j] + 100 * tmp[i-2][j+1]+ 100 * tmp[i-2][j+2] -
-                   32 * tmp[i-1][j-2] + 78 * tmp[i-1][j-1] + 100 * tmp[i-1][j] + 100 * tmp[i-1][j+1]+ 100 * tmp[i-1][j+2] -
+            n[5] = 0 - 100 * tmp[i-2][j-2] - 100 * tmp[i-2][j-1] - 100 * tmp[i-2][j] - 100 * tmp[i-2][j+1] - 100 * tmp[i-2][j+2] -
+                   100 * tmp[i-1][j-2] - 100 * tmp[i-1][j-1] - 100 * tmp[i-1][j] - 78 * tmp[i-1][j+1] + 32 * tmp[i-1][j+2] -
                    100 * tmp[i][j-2] - 92 * tmp[i][j-1] + 92 * tmp[i][j+1] + 100 * tmp[i][j+2] -
-                   100 * tmp[i+1][j-2] - 100 * tmp[i+1][j-1] - 100 * tmp[i+1][j] - 78 * tmp[i+1][j+1] + 32 * tmp[i+1][j+2] -
-                   100 * tmp[i+2][j-2] - 100 * tmp[i+2][j-1] - 100 * tmp[i+2][j] - 100 * tmp[i+2][j+1] - 100 * tmp[i+2][j+2];
+                   32 * tmp[i+1][j-2] + 78 * tmp[i+1][j-1] + 100 * tmp[i+1][j] + 100 * tmp[i+1][j+1] + 100 * tmp[i+1][j+2] +
+                   100 * tmp[i+2][j-2] + 100 * tmp[i+2][j-1] + 100 * tmp[i+2][j] + 100 * tmp[i+2][j+1] + 100 * tmp[i+2][j+2];
 
             BMPoutput_data[i-2][j-2].color = (*max_element(n, n+6) > threshold) ? 0 : 255;
         }
